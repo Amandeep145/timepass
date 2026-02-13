@@ -23,14 +23,10 @@ st.markdown("""
     
     /* Custom styling */
     .main {
-        padding: 2rem;
+        padding: 0rem;
     }
 </style>
 """, unsafe_allow_html=True)
-
-# Initialize session state
-if 'stage' not in st.session_state:
-    st.session_state.stage = 'bouquet'  # bouquet, question, answered
 
 # Full page HTML component
 html_code = """
@@ -47,11 +43,25 @@ html_code = """
             box-sizing: border-box;
         }
         
+        html, body {
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+        
         body {
             font-family: 'Poppins', sans-serif;
-            overflow-x: hidden;
             background: linear-gradient(135deg, #ffd1dc 0%, #ffb6c1 50%, #ffc0cb 100%);
-            min-height: 100vh;
+        }
+        
+        /* Hide all scrollbars */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+        
+        * {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
         
         /* Floating hearts background */
@@ -82,84 +92,109 @@ html_code = """
         .container {
             position: relative;
             z-index: 10;
-            padding: 20px;
-            max-width: 900px;
-            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            overflow: hidden;
         }
         
         /* Stage 1: Bouquet Builder */
         #bouquetStage {
             text-align: center;
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .greeting {
+            font-family: 'Pacifico', cursive;
+            font-size: 2em;
+            color: #ff69b4;
+            margin: 10px 0;
+            text-shadow: 2px 2px 4px rgba(255, 105, 180, 0.2);
+            animation: greetingFade 1s ease-in;
+        }
+        
+        @keyframes greetingFade {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         .title {
             font-family: 'Pacifico', cursive;
-            font-size: 3em;
+            font-size: 2.2em;
             color: #ff1493;
-            margin: 30px 0 10px;
+            margin: 5px 0;
             text-shadow: 2px 2px 4px rgba(255, 105, 180, 0.3);
-            animation: gentlePulse 3s infinite;
-        }
-        
-        @keyframes gentlePulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.03); }
         }
         
         .subtitle {
-            font-size: 1.2em;
+            font-size: 1em;
             color: #c71585;
-            margin-bottom: 40px;
+            margin-bottom: 15px;
             font-weight: 300;
         }
         
         /* Flower palette */
         .flower-palette {
             background: rgba(255, 255, 255, 0.7);
-            border-radius: 20px;
-            padding: 30px;
-            margin: 20px auto;
-            box-shadow: 0 10px 30px rgba(255, 105, 180, 0.2);
-            max-width: 600px;
+            border-radius: 15px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 8px 20px rgba(255, 105, 180, 0.2);
+            width: 100%;
+            max-width: 500px;
         }
         
         .palette-title {
-            font-size: 1.4em;
+            font-size: 1.1em;
             color: #ff1493;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             font-weight: 600;
         }
         
         .flowers-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
         }
         
         .flower-item {
             background: white;
-            border-radius: 15px;
-            padding: 15px;
+            border-radius: 12px;
+            padding: 10px;
             cursor: pointer;
             transition: all 0.3s ease;
-            border: 3px solid transparent;
+            border: 2px solid transparent;
             position: relative;
         }
         
         .flower-item:hover {
-            transform: translateY(-5px) scale(1.05);
+            transform: translateY(-3px) scale(1.05);
             border-color: #ff69b4;
-            box-shadow: 0 8px 20px rgba(255, 105, 180, 0.3);
+            box-shadow: 0 6px 15px rgba(255, 105, 180, 0.3);
         }
         
         .flower-icon {
-            font-size: 3em;
-            margin-bottom: 5px;
+            font-size: 2.2em;
+            margin-bottom: 3px;
+            display: inline-block;
+            animation: flowerBob 2s ease-in-out infinite;
+        }
+        
+        @keyframes flowerBob {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-5px) rotate(5deg); }
         }
         
         .flower-name {
-            font-size: 0.9em;
+            font-size: 0.75em;
             color: #ff1493;
             font-weight: 600;
         }
@@ -171,15 +206,16 @@ html_code = """
             transform: translateX(-50%);
             background: #ff1493;
             color: white;
-            padding: 10px 15px;
-            border-radius: 10px;
-            font-size: 0.85em;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.75em;
             white-space: nowrap;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 100;
         }
         
         .flower-meaning::after {
@@ -188,7 +224,7 @@ html_code = """
             top: 100%;
             left: 50%;
             transform: translateX(-50%);
-            border: 8px solid transparent;
+            border: 6px solid transparent;
             border-top-color: #ff1493;
         }
         
@@ -199,46 +235,51 @@ html_code = """
         /* Your bouquet */
         .your-bouquet {
             background: rgba(255, 255, 255, 0.85);
-            border-radius: 20px;
-            padding: 25px;
-            margin: 30px auto;
-            min-height: 200px;
-            max-width: 600px;
-            border: 3px dashed #ffb6c1;
+            border-radius: 15px;
+            padding: 15px;
+            margin: 10px 0;
+            min-height: 80px;
+            width: 100%;
+            max-width: 500px;
+            border: 2px dashed #ffb6c1;
         }
         
         .bouquet-title {
-            font-size: 1.3em;
+            font-size: 1.1em;
             color: #ff1493;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             font-weight: 600;
         }
         
         .bouquet-flowers {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
             justify-content: center;
-            min-height: 100px;
+            min-height: 50px;
             align-items: center;
         }
         
         .bouquet-flower {
-            font-size: 2.5em;
-            animation: popIn 0.3s ease;
+            font-size: 2em;
+            animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             position: relative;
             cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .bouquet-flower:hover {
+            transform: scale(1.2) rotate(10deg);
         }
         
         @keyframes popIn {
-            0% { transform: scale(0); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
+            0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
         }
         
         .bouquet-empty {
             color: #ffb6c1;
-            font-size: 1.1em;
+            font-size: 0.9em;
             font-style: italic;
         }
         
@@ -246,24 +287,24 @@ html_code = """
             background: linear-gradient(45deg, #ff1493, #ff69b4);
             color: white;
             border: none;
-            padding: 18px 50px;
-            font-size: 1.3em;
+            padding: 15px 40px;
+            font-size: 1.1em;
             border-radius: 50px;
             cursor: pointer;
             font-weight: 600;
-            box-shadow: 0 8px 20px rgba(255, 20, 147, 0.4);
+            box-shadow: 0 6px 15px rgba(255, 20, 147, 0.4);
             transition: all 0.3s ease;
             font-family: 'Poppins', sans-serif;
-            margin-top: 20px;
+            margin-top: 10px;
         }
         
-        .wrap-button:hover {
+        .wrap-button:hover:not(:disabled) {
             transform: translateY(-3px);
-            box-shadow: 0 12px 30px rgba(255, 20, 147, 0.5);
+            box-shadow: 0 10px 25px rgba(255, 20, 147, 0.6);
         }
         
         .wrap-button:disabled {
-            background: #ccc;
+            background: linear-gradient(45deg, #ddd, #ccc);
             cursor: not-allowed;
             box-shadow: none;
         }
@@ -271,117 +312,324 @@ html_code = """
         /* Stage 2: Wrapping Animation */
         #wrappingStage {
             display: none;
-            text-align: center;
-            padding: 50px 20px;
-        }
-        
-        .wrapping-animation {
-            position: relative;
-            margin: 50px auto;
-        }
-        
-        .bouquet-display {
-            font-size: 6em;
-            margin: 30px 0;
-            animation: bouquetFloat 2s infinite;
-        }
-        
-        @keyframes bouquetFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
-        }
-        
-        .wrapper {
-            position: absolute;
+            position: fixed;
             top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1000;
+        }
+        
+        .wrapping-container {
+            position: relative;
+            width: 350px;
+            height: 450px;
+            margin: 0 auto;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .animated-bouquet {
+            position: absolute;
+            bottom: 100px;
             left: 50%;
             transform: translateX(-50%);
-            width: 300px;
-            height: 400px;
-            background: linear-gradient(135deg, #ff69b4, #ffc0cb);
-            border-radius: 20px;
-            animation: wrapBouquet 2s ease-out forwards;
-            opacity: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: gatherFlowers 1.5s ease-out forwards;
         }
         
-        @keyframes wrapBouquet {
-            0% { 
+        @keyframes gatherFlowers {
+            0% {
+                transform: translateX(-50%) scale(0.3);
                 opacity: 0;
-                transform: translateX(-50%) translateY(-100%) scale(0.5);
-            }
-            50% {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0) scale(1.1);
             }
             100% {
+                transform: translateX(-50%) scale(1);
                 opacity: 1;
-                transform: translateX(-50%) translateY(0) scale(1);
             }
         }
         
-        .wrapping-text {
-            font-family: 'Pacifico', cursive;
-            font-size: 2.5em;
-            color: #ff1493;
-            margin-top: 30px;
-            animation: fadeInOut 2s infinite;
+        .flower-heads {
+            display: flex;
+            gap: 5px;
+            margin-bottom: -20px;
+            z-index: 3;
+            position: relative;
         }
         
-        @keyframes fadeInOut {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
+        .animated-flower {
+            font-size: 2.8em;
+            animation: bloomFlower 0.8s ease-out backwards;
+        }
+        
+        .animated-flower:nth-child(1) { animation-delay: 0.2s; }
+        .animated-flower:nth-child(2) { animation-delay: 0.4s; }
+        .animated-flower:nth-child(3) { animation-delay: 0.6s; }
+        .animated-flower:nth-child(4) { animation-delay: 0.8s; }
+        .animated-flower:nth-child(5) { animation-delay: 1s; }
+        
+        @keyframes bloomFlower {
+            0% {
+                transform: scale(0) rotate(-90deg);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+        
+        .stems {
+            width: 100px;
+            height: 160px;
+            background: linear-gradient(to bottom, #90EE90 0%, #228B22 100%);
+            border-radius: 0 0 50% 50%;
+            position: relative;
+            z-index: 2;
+            animation: growStems 1s ease-out 0.5s backwards;
+        }
+        
+        @keyframes growStems {
+            0% {
+                height: 0;
+                opacity: 0;
+            }
+            100% {
+                height: 160px;
+                opacity: 1;
+            }
+        }
+        
+        .wrapping-paper {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 250px;
+            height: 280px;
+            background: linear-gradient(135deg, #FFB6C1 0%, #FFC0CB 50%, #FFB6C1 100%);
+            clip-path: polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%);
+            z-index: 1;
+            animation: wrapPaper 1.5s ease-out 1.8s backwards;
+            box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.5);
+        }
+        
+        @keyframes wrapPaper {
+            0% {
+                transform: translateX(-50%) scaleY(0);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(-50%) scaleY(1);
+                opacity: 1;
+            }
+        }
+        
+        .ribbon {
+            position: absolute;
+            bottom: 180px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 130px;
+            height: 35px;
+            background: #FF1493;
+            z-index: 4;
+            animation: tieRibbon 0.8s ease-out 3.3s backwards;
+            border-radius: 5px;
+        }
+        
+        .ribbon::before,
+        .ribbon::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 0;
+            height: 0;
+            border: 18px solid transparent;
+        }
+        
+        .ribbon::before {
+            left: -36px;
+            border-right-color: #FF1493;
+            transform: translateY(-50%);
+        }
+        
+        .ribbon::after {
+            right: -36px;
+            border-left-color: #FF1493;
+            transform: translateY(-50%);
+        }
+        
+        .bow {
+            position: absolute;
+            top: -22px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 50px;
+            background: #FF1493;
+            border-radius: 50%;
+            animation: bowAppear 0.5s ease-out 3.8s backwards;
+        }
+        
+        .bow::before,
+        .bow::after {
+            content: '';
+            position: absolute;
+            background: #FF1493;
+            border-radius: 50%;
+        }
+        
+        .bow::before {
+            width: 35px;
+            height: 45px;
+            left: -30px;
+            top: 2px;
+        }
+        
+        .bow::after {
+            width: 35px;
+            height: 45px;
+            right: -30px;
+            top: 2px;
+        }
+        
+        @keyframes tieRibbon {
+            0% {
+                transform: translateX(-50%) scaleX(0);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(-50%) scaleX(1);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes bowAppear {
+            0% {
+                transform: translateX(-50%) scale(0) rotate(180deg);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(-50%) scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+        
+        /* Fading message overlay */
+        .message-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(255, 192, 203, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .message-overlay.active {
+            animation: messageSequence 4s ease-in-out forwards;
+        }
+        
+        @keyframes messageSequence {
+            0% {
+                opacity: 0;
+            }
+            15% {
+                opacity: 1;
+            }
+            85% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+        
+        .overlay-text {
+            font-family: 'Pacifico', cursive;
+            font-size: 3em;
+            color: white;
+            text-align: center;
+            text-shadow: 3px 3px 6px rgba(255, 20, 147, 0.5);
+            animation: textZoom 4s ease-in-out;
+        }
+        
+        @keyframes textZoom {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            15% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            85% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.2);
+                opacity: 0;
+            }
         }
         
         /* Stage 3: Question */
         #questionStage {
             display: none;
             text-align: center;
-            padding: 20px;
+            animation: fadeInQuestion 1s ease-in;
+        }
+        
+        @keyframes fadeInQuestion {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
         
         .reveal-message {
             font-family: 'Pacifico', cursive;
-            font-size: 2em;
+            font-size: 1.8em;
             color: #ff1493;
             margin: 20px 0;
-            animation: slideDown 0.8s ease;
-        }
-        
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
         
         .big-question {
             font-family: 'Pacifico', cursive;
-            font-size: 3.5em;
+            font-size: 3em;
             color: #ff1493;
-            margin: 30px 0;
+            margin: 20px 0;
             text-shadow: 3px 3px 6px rgba(255, 105, 180, 0.4);
             animation: questionPulse 2s infinite;
         }
         
         @keyframes questionPulse {
             0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.08); }
+            50% { transform: scale(1.05); }
         }
         
         .buttons-container {
             position: relative;
-            min-height: 350px;
-            margin-top: 40px;
+            min-height: 250px;
+            margin-top: 30px;
         }
         
         .btn {
             font-family: 'Poppins', sans-serif;
-            font-size: 1.6em;
-            padding: 22px 70px;
+            font-size: 1.5em;
+            padding: 20px 60px;
             border: none;
             border-radius: 50px;
             cursor: pointer;
@@ -396,7 +644,7 @@ html_code = """
         #yesBtn {
             background: linear-gradient(45deg, #ff1493, #ff69b4);
             color: white;
-            top: 50px;
+            top: 30px;
             animation: yesBounce 2s infinite;
         }
         
@@ -407,27 +655,35 @@ html_code = """
         
         @keyframes yesBounce {
             0%, 100% { transform: translateX(-50%) translateY(0); }
-            50% { transform: translateX(-50%) translateY(-12px); }
+            50% { transform: translateX(-50%) translateY(-10px); }
         }
         
         #noBtn {
             background: linear-gradient(45deg, #ffc0cb, #ffb6c1);
             color: #ff1493;
-            top: 170px;
+            top: 130px;
         }
         
         /* Stage 4: Final Message */
         #finalStage {
             display: none;
             padding: 20px;
+            max-height: 100vh;
+            overflow-y: auto;
+            animation: fadeIn 1s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         
         .celebration {
             text-align: center;
             font-family: 'Pacifico', cursive;
-            font-size: 3.5em;
+            font-size: 3em;
             color: #ff1493;
-            margin: 30px 0;
+            margin: 20px 0;
             animation: celebrate 1s ease;
         }
         
@@ -439,43 +695,41 @@ html_code = """
         
         .love-letter {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 192, 203, 0.4));
-            border-radius: 30px;
-            padding: 50px 35px;
-            box-shadow: 0 20px 60px rgba(255, 105, 180, 0.4);
-            margin: 30px auto;
-            max-width: 700px;
+            border-radius: 25px;
+            padding: 40px 30px;
+            box-shadow: 0 15px 50px rgba(255, 105, 180, 0.4);
+            margin: 20px auto;
+            max-width: 650px;
             border: 3px solid #ffb6c1;
-            position: relative;
         }
         
         .message-title {
             font-family: 'Pacifico', cursive;
-            font-size: 2.3em;
+            font-size: 2em;
             color: #ff1493;
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
         
         .message-text {
-            font-size: 1.2em;
+            font-size: 1.1em;
             color: #c71585;
-            line-height: 1.9;
+            line-height: 1.8;
             text-align: center;
-            margin-bottom: 18px;
+            margin-bottom: 15px;
         }
         
         .highlight {
             color: #ff1493;
             font-weight: 600;
-            font-size: 1.08em;
         }
         
         .signature {
             font-family: 'Pacifico', cursive;
-            font-size: 2em;
+            font-size: 1.8em;
             color: #ff69b4;
             text-align: right;
-            margin-top: 35px;
+            margin-top: 25px;
         }
         
         /* Firework effects */
@@ -524,11 +778,13 @@ html_code = """
         
         /* Mobile responsive */
         @media (max-width: 768px) {
-            .title { font-size: 2em; }
-            .big-question { font-size: 2.2em; }
-            .btn { font-size: 1.3em; padding: 18px 50px; }
-            .flower-icon { font-size: 2.5em; }
-            .flowers-grid { grid-template-columns: repeat(3, 1fr); }
+            .greeting { font-size: 1.5em; }
+            .title { font-size: 1.8em; }
+            .big-question { font-size: 2em; }
+            .btn { font-size: 1.2em; padding: 15px 45px; }
+            .flower-icon { font-size: 2em; }
+            .wrapping-container { width: 280px; height: 380px; }
+            .overlay-text { font-size: 2em; }
         }
     </style>
 </head>
@@ -537,6 +793,7 @@ html_code = """
     <div class="container">
         <!-- Stage 1: Bouquet Builder -->
         <div id="bouquetStage">
+            <div class="greeting">Hi, Chishu! 💕</div>
             <div class="title">🌸 Create Your Bouquet 🌸</div>
             <div class="subtitle">Pick flowers that speak to your heart... each one has a special meaning 💕</div>
             
@@ -605,15 +862,26 @@ html_code = """
         
         <!-- Stage 2: Wrapping Animation -->
         <div id="wrappingStage">
-            <div class="wrapping-animation">
-                <div class="bouquet-display" id="finalBouquet">💐</div>
+            <div class="wrapping-container">
+                <div class="animated-bouquet">
+                    <div class="flower-heads" id="animatedFlowerHeads"></div>
+                    <div class="stems"></div>
+                </div>
+                <div class="wrapping-paper"></div>
+                <div class="ribbon">
+                    <div class="bow"></div>
+                </div>
             </div>
-            <div class="wrapping-text">Wrapping your beautiful bouquet... 🎀</div>
+            <div class="message-overlay" id="messageOverlay">
+                <div class="overlay-text">
+                    You picked all my favorites! 💕<br>
+                    Here's something special...
+                </div>
+            </div>
         </div>
         
         <!-- Stage 3: Question -->
         <div id="questionStage">
-            <div class="reveal-message">You picked all my favorites! 💕</div>
             <div class="big-question">💝 Will You Be My Valentine? 💝</div>
             
             <div class="buttons-container">
@@ -623,46 +891,6 @@ html_code = """
         </div>
         
         <!-- Stage 4: Final Message -->
-       <!-- <div id="finalStage">
-            <div class="hearts-rain" id="heartsRain"></div>
-            <div class="celebration">🎉 Yayyy! She Said Yes! 🎉</div>
-            
-            <div class="love-letter">
-                <div class="message-title">💝 To My Beautiful Valentine 💝</div>
-                
-                <div class="message-text">
-                    From the moment I met you, my world became <span class="highlight">brighter</span>, 
-                    my days became <span class="highlight">sweeter</span>, and my heart became <span class="highlight">fuller</span>.
-                </div>
-                
-                <div class="message-text">
-                    You make me laugh when I want to cry, you lift me up when I'm down, 
-                    and you make every ordinary moment feel <span class="highlight">extraordinary</span>.
-                </div>
-                
-                <div class="message-text">
-                    Being with you feels like coming home. Your smile is my favorite sight, 
-                    your laugh is my favorite sound, and your happiness is my favorite mission.
-                </div>
-                
-                <div class="message-text">
-                    This Valentine's Day, and every day, I want you to know that 
-                    <span class="highlight">you are cherished</span>, <span class="highlight">you are adored</span>, 
-                    and <span class="highlight">you are loved beyond measure</span>.
-                </div>
-                
-                <div class="message-text">
-                    Thank you for being mine. Thank you for saying yes. 
-                    Thank you for being the most amazing person I know. 💕
-                </div>
-                
-                <div class="message-text" style="font-size: 1.4em; margin-top: 25px;">
-                    Happy Valentine's Day, my love! 💖
-                </div>
-                
-                <div class="signature">Forever Yours 💕</div>
-            </div>
-        </div> -->
         <div id="finalStage">
             <div class="hearts-rain" id="heartsRain"></div>
             <div class="celebration">🎉 Yayyy! She Said Yes! 🎉</div>
@@ -671,13 +899,13 @@ html_code = """
                 <div class="message-title">💝 To My Beautiful Chishu 💝</div>
 
                 <div class="message-text">
-                    From the moment we met working on that Master’s project, my world became <span class="highlight">brighter</span>, 
-                    my days became <span class="highlight">sweeter</span>, and my heart became <span class="highlight">fuller</span>. I still can’t believe it all started with calls and late-night coding sessions!
+                    From the moment we met working on that Master's project, my world became <span class="highlight">brighter</span>, 
+                    my days became <span class="highlight">sweeter</span>, and my heart became <span class="highlight">fuller</span>. I still can't believe it all started with calls and late-night coding sessions!
                 </div>
 
                 <div class="message-text">
-                    You make me laugh when I want to cry, you lift me up when I’m down, 
-                    and you make every ordinary moment feel <span class="highlight">extraordinary</span> even when we’re just watching shows or sitting together in silence.
+                    You make me laugh when I want to cry, you lift me up when I'm down, 
+                    and you make every ordinary moment feel <span class="highlight">extraordinary</span> even when we're just watching shows or sitting together in silence.
                 </div>
 
                 <div class="message-text">
@@ -688,21 +916,20 @@ html_code = """
                 <div class="message-text">
                     This Valentine's Day, and every day, I want you to know that 
                     <span class="highlight">you are cherished</span>, <span class="highlight">you are adored</span>, 
-                    and <span class="highlight">you are loved beyond measure</span>. It's been amazing building this life with you, especially since I proposed in April of 2022 it's hard to believe it’s only going to be 4 years until 2026!
+                    and <span class="highlight">you are loved beyond measure</span>. It's been amazing building this life with you, especially since I proposed in April of 2022 it's hard to believe it's only going to be 4 years until 2026!
                 </div>
 
                 <div class="message-text">
-                    Thank you for being mine, for saying yes, and for being the most amazing person I know. We've had our ups and downs, and we’re still stronger because of it our connection is truly something special. I adore your mischievous side, especially when it's just for me! 💕 
+                    Thank you for being mine, for saying yes, and for being the most amazing person I know. We've had our ups and downs, and we're still stronger because of it our connection is truly something special. I adore your mischievous side, especially when it's just for me! 💕 
                 </div>
 
-                <div class="message-text" style="font-size: 1.4em; margin-top: 25px;">
-                    Happy Valentine's Day, my love! 💖  I’m so lucky to have you, Sejal.
+                <div class="message-text" style="font-size: 1.3em; margin-top: 20px;">
+                    Happy Valentine's Day, my love! 💖  I'm so lucky to have you, Sejal.
                 </div>
 
                 <div class="signature">Forever Yours, Amandeep 💕</div>
             </div>
         </div>
-
     </div>
     
     <script>
@@ -763,15 +990,23 @@ html_code = """
             const wrappingStage = document.getElementById('wrappingStage');
             wrappingStage.style.display = 'block';
             
-            // Display user's bouquet
-            document.getElementById('finalBouquet').textContent = bouquetFlowers.join(' ');
+            // Display animated flowers
+            const flowerHeads = document.getElementById('animatedFlowerHeads');
+            flowerHeads.innerHTML = bouquetFlowers.slice(0, 5).map((flower, idx) => 
+                `<div class="animated-flower">${flower}</div>`
+            ).join('');
             
-            // After 3 seconds, show question
+            // Show fading message after wrapping completes (4.5 seconds)
+            setTimeout(() => {
+                document.getElementById('messageOverlay').classList.add('active');
+            }, 4500);
+            
+            // After message fades (4 more seconds), show question
             setTimeout(() => {
                 wrappingStage.style.display = 'none';
                 document.getElementById('questionStage').style.display = 'block';
                 setupNoButton();
-            }, 3000);
+            }, 8500);
         }
         
         // Setup "No" button to run away
@@ -874,4 +1109,4 @@ html_code = """
 """
 
 # Display the component
-components.html(html_code, height=800, scrolling=True)
+components.html(html_code, height=800, scrolling=False)
